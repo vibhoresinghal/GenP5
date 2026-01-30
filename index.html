@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PatternFlow - Generative Art Studio</title>
+    <meta name="description"
+        content="Create stunning generative art and animations with PatternFlow. No coding required - use our intuitive GUI to manipulate p5.js patterns in real-time.">
+    <meta name="theme-color" content="#0a0a0b">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- p5.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Template Selection Grid -->
+    <section id="template-grid" class="view active">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="16" cy="16" r="14" stroke="url(#grad1)" stroke-width="2" />
+                        <path d="M16 6C16 6 22 12 22 16C22 20 16 26 16 26C16 26 10 20 10 16C10 12 16 6 16 6Z"
+                            fill="url(#grad2)" opacity="0.7" />
+                        <circle cx="16" cy="16" r="4" fill="url(#grad3)" />
+                        <defs>
+                            <linearGradient id="grad1" x1="0" y1="0" x2="32" y2="32">
+                                <stop offset="0%" stop-color="#a855f7" />
+                                <stop offset="100%" stop-color="#3b82f6" />
+                            </linearGradient>
+                            <linearGradient id="grad2" x1="10" y1="6" x2="22" y2="26">
+                                <stop offset="0%" stop-color="#a855f7" />
+                                <stop offset="100%" stop-color="#06b6d4" />
+                            </linearGradient>
+                            <linearGradient id="grad3" x1="12" y1="12" x2="20" y2="20">
+                                <stop offset="0%" stop-color="#f472b6" />
+                                <stop offset="100%" stop-color="#818cf8" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                <span class="logo-text">PatternFlow</span>
+            </div>
+            <p class="tagline">Create generative art without code</p>
+        </header>
+
+        <main class="grid-container">
+            <h2 class="section-title">Choose a Pattern</h2>
+            <div class="template-grid" id="templates">
+                <!-- Templates will be dynamically inserted here -->
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>Press <kbd>ESC</kbd> to return to templates • Built with p5.js</p>
+        </footer>
+    </section>
+
+    <!-- Canvas Workspace -->
+    <section id="workspace" class="view">
+        <div class="workspace-layout">
+            <!-- Canvas Area -->
+            <div class="canvas-area">
+                <div class="canvas-header">
+                    <button id="back-btn" class="btn-icon" title="Back to Templates">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 12H5M12 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                    <span id="pattern-title" class="pattern-title">Pattern Name</span>
+                    <button id="fullscreen-btn" class="btn-icon" title="Toggle Fullscreen">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path
+                                d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                        </svg>
+                    </button>
+                </div>
+                <div id="canvas-container" class="canvas-container">
+                    <!-- p5.js canvas will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <div class="panel-header">
+                    <h3>Controls</h3>
+                    <button id="reset-btn" class="btn-secondary">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16"
+                            height="16">
+                            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                            <path d="M21 3v5h-5" />
+                            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                            <path d="M8 16H3v5" />
+                        </svg>
+                        Reset
+                    </button>
+                </div>
+
+                <div id="controls-container" class="controls-container">
+                    <!-- Dynamic controls will be inserted here -->
+                </div>
+
+                <div class="panel-footer">
+                    <button id="finish-btn" class="btn-primary">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18"
+                            height="18">
+                            <path
+                                d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+                        </svg>
+                        Finish & Export
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Export Modal -->
+    <div id="export-modal" class="modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Export Your Creation</h3>
+                <button id="close-modal" class="btn-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <button id="copy-code-btn" class="export-option">
+                    <div class="export-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                            <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+                            <path d="M9 12h6M9 16h6" />
+                        </svg>
+                    </div>
+                    <div class="export-info">
+                        <span class="export-title">Copy Code</span>
+                        <span class="export-desc">Get the full p5.js sketch code</span>
+                    </div>
+                    <div class="export-arrow">→</div>
+                </button>
+                <button id="record-video-btn" class="export-option">
+                    <div class="export-icon recording">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <circle cx="12" cy="12" r="3" fill="currentColor" />
+                        </svg>
+                    </div>
+                    <div class="export-info">
+                        <span class="export-title">Record Video</span>
+                        <span class="export-desc">Capture a 5-second loop</span>
+                    </div>
+                    <div class="export-arrow">→</div>
+                </button>
+            </div>
+
+            <!-- Recording Progress -->
+            <div id="recording-progress" class="recording-progress hidden">
+                <div class="progress-header">
+                    <span class="recording-indicator"></span>
+                    <span>Recording in progress...</span>
+                </div>
+                <div class="progress-bar">
+                    <div id="progress-fill" class="progress-fill"></div>
+                </div>
+                <p id="progress-text">0 / 5 seconds</p>
+            </div>
+
+            <!-- Code Preview -->
+            <div id="code-preview" class="code-preview hidden">
+                <div class="code-header">
+                    <span>sketch.js</span>
+                    <button id="copy-btn" class="btn-secondary">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14"
+                            height="14">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                        </svg>
+                        Copy
+                    </button>
+                </div>
+                <pre><code id="code-content"></code></pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden">
+        <span id="toast-message"></span>
+    </div>
+
+    <!-- Scripts -->
+    <script src="patterns.js"></script>
+    <script src="patterns-extra.js"></script>
+    <script src="controls.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
