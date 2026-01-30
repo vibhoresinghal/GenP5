@@ -24,6 +24,7 @@
     --accent-blue: #3b82f6;
     --accent-cyan: #06b6d4;
     --accent-pink: #ec4899;
+    --primary: var(--accent-purple);
 
     --gradient-primary: linear-gradient(135deg, #a855f7 0%, #3b82f6 50%, #06b6d4 100%);
     --gradient-secondary: linear-gradient(135deg, #ec4899 0%, #a855f7 100%);
@@ -486,15 +487,55 @@ body {
 
 .panel-header {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: var(--space-3);
     padding: var(--space-4) var(--space-5);
     border-bottom: 1px solid var(--border-subtle);
+}
+
+.header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
 }
 
 .panel-header h3 {
     font-size: var(--font-lg);
     font-weight: 600;
+}
+
+.header-tools {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    width: 100%;
+}
+
+.select-sm {
+    flex: 1;
+    padding: 6px 10px;
+    font-size: var(--font-xs);
+    border-radius: var(--radius-sm);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-default);
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.dev-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    cursor: pointer;
+    font-size: var(--font-xs);
+    color: var(--text-muted);
+    white-space: nowrap;
+    user-select: none;
+}
+
+.dev-toggle input {
+    accent-color: var(--primary);
 }
 
 .controls-container {
@@ -714,6 +755,89 @@ body {
 
 .palette-color {
     flex: 1;
+}
+
+/* Image Upload Control */
+.image-upload-container {
+    margin-bottom: var(--space-4);
+}
+
+.upload-area {
+    position: relative;
+}
+
+.file-input {
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.upload-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-6) var(--space-4);
+    background: var(--bg-tertiary);
+    border: 2px dashed var(--border-default);
+    border-radius: var(--radius-md);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.upload-label:hover {
+    border-color: var(--accent-purple);
+    color: var(--text-secondary);
+    background: rgba(168, 85, 247, 0.05);
+}
+
+.upload-label svg {
+    opacity: 0.6;
+}
+
+.image-preview {
+    width: 100%;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid var(--border-subtle);
+    transition: border-color var(--transition-fast);
+}
+
+.image-preview:hover {
+    border-color: var(--accent-purple);
+}
+
+.image-preview img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Select Dropdown */
+.control-select {
+    width: 100%;
+    padding: var(--space-3);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: var(--font-sm);
+    cursor: pointer;
+    transition: border-color var(--transition-fast);
+}
+
+.control-select:hover {
+    border-color: var(--border-hover);
+}
+
+.control-select:focus {
+    outline: none;
+    border-color: var(--accent-purple);
 }
 
 /* ========================================
@@ -1023,6 +1147,59 @@ body {
     white-space: pre-wrap;
 }
 
+/* Export Grid Styles */
+.export-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-6);
+    padding: var(--space-2);
+}
+
+.export-section h4 {
+    font-size: var(--font-xs);
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: var(--space-3);
+    letter-spacing: 0.05em;
+    font-weight: 600;
+}
+
+.export-options-row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.select-input {
+    width: 100%;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-default);
+    color: var(--text-primary);
+    padding: var(--space-2);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-sm);
+}
+
+.export-option.primary {
+    background: var(--text-primary);
+    color: var(--bg-primary);
+}
+
+.export-option.primary:hover {
+    background: #fff;
+    border-color: #fff;
+}
+
 /* ========================================
    Toast Notification
    ======================================== */
@@ -1108,4 +1285,19 @@ body {
     .template-grid {
         gap: var(--space-4);
     }
+}
+
+/* Dev Mode Styles */
+body.dev-mode {
+    --primary: #f59e0b;
+    /* Amber warning color */
+}
+
+body.dev-mode .control-value {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+body.dev-mode .panel-header {
+    border-bottom-color: var(--primary);
 }

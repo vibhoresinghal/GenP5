@@ -78,6 +78,12 @@ class ControlSystem {
             case 'color':
                 wrapper.appendChild(this.createColorPicker(config));
                 break;
+            case 'imageUpload':
+                wrapper.appendChild(this.createImageUpload(config));
+                break;
+            case 'select':
+                wrapper.appendChild(this.createSelect(config));
+                break;
         }
 
         return wrapper;
@@ -225,6 +231,94 @@ class ControlSystem {
         });
 
         this.controls.push({ name: config.name, element: container, type: 'color', config });
+
+        return container;
+    }
+
+    /**
+     * Create an image upload control
+     */
+    createImageUpload(config) {
+        const container = document.createElement('div');
+        container.className = 'image-upload-container';
+
+        container.innerHTML = `
+            <div class="control-label">
+                <span>${config.label}</span>
+            </div>
+            <div class="upload-area" id="upload-${config.name}">
+                <input type="file" accept="image/*" id="file-${config.name}" class="file-input">
+                <label for="file-${config.name}" class="upload-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    <span>Upload Image</span>
+                </label>
+                <div id="preview-${config.name}" class="image-preview hidden"></div>
+            </div>
+        `;
+
+        const fileInput = container.querySelector('.file-input');
+        const preview = container.querySelector('.image-preview');
+        const uploadLabel = container.querySelector('.upload-label');
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    // Store the data URL in params
+                    this.params[config.name] = evt.target.result;
+
+                    // Show preview
+                    preview.innerHTML = `<img src="${evt.target.result}" alt="Preview">`;
+                    preview.classList.remove('hidden');
+                    uploadLabel.classList.add('hidden');
+
+                    this.onUpdate(this.params);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Click preview to re-upload
+        preview.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        this.controls.push({ name: config.name, element: container, type: 'imageUpload', config });
+
+        return container;
+    }
+
+    /**
+     * Create a select dropdown control
+     */
+    createSelect(config) {
+        const container = document.createElement('div');
+        const currentValue = this.params[config.name];
+
+        container.innerHTML = `
+            <div class="control-label">
+                <span>${config.label}</span>
+            </div>
+            <select class="control-select" id="select-${config.name}">
+                ${config.options.map((opt, i) => `
+                    <option value="${i}" ${i === currentValue ? 'selected' : ''}>${opt}</option>
+                `).join('')}
+            </select>
+        `;
+
+        const select = container.querySelector('select');
+
+        select.addEventListener('change', (e) => {
+            this.params[config.name] = parseInt(e.target.value);
+            this.onUpdate(this.params);
+        });
+
+        this.controls.push({ name: config.name, element: select, type: 'select', config });
 
         return container;
     }

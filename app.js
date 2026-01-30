@@ -15,6 +15,17 @@ class PatternFlowApp {
         this.mediaRecorder = null;
         this.recordedChunks = [];
 
+        // Export Settings
+        this.exportSettings = {
+            width: 2048,
+            height: 2048,
+            transparent: false,
+            pixelDensity: 2
+        };
+
+        this.aspectRatio = 'free'; // 'free', '1:1', '16:9', etc.
+        this.devMode = false;
+
         // DOM Elements
         this.templateGrid = document.getElementById('template-grid');
         this.workspace = document.getElementById('workspace');
@@ -57,6 +68,21 @@ class PatternFlowApp {
         document.getElementById('copy-code-btn').addEventListener('click', () => this.showCodePreview());
         document.getElementById('record-video-btn').addEventListener('click', () => this.startRecording());
 
+        // New Export Options
+        document.getElementById('export-highres-btn').addEventListener('click', () => {
+            const res = document.getElementById('export-resolution').value;
+            const width = parseInt(res) <= 2 ? this.canvasContainer.clientWidth * parseInt(res) : parseInt(res);
+            const height = parseInt(res) <= 2 ? this.canvasContainer.clientHeight * parseInt(res) : parseInt(res);
+            this.exportHighRes(width, height);
+        });
+
+        document.getElementById('transparent-bg-toggle').addEventListener('change', (e) => {
+            this.exportSettings.transparent = e.target.checked;
+        });
+
+        document.getElementById('export-json-btn').addEventListener('click', () => this.exportConfigJSON());
+        document.getElementById('export-react-btn').addEventListener('click', () => this.exportReactComponent());
+
         // Copy button
         document.getElementById('copy-btn').addEventListener('click', () => this.copyCode());
 
@@ -79,6 +105,17 @@ class PatternFlowApp {
             if (this.p5Instance && this.currentPattern) {
                 this.resizeCanvas();
             }
+        });
+
+        // Dev Mode Toggle
+        document.getElementById('dev-mode-toggle').addEventListener('change', (e) => {
+            this.toggleDevMode(e.target.checked);
+        });
+
+        // Aspect Ratio
+        document.getElementById('aspect-ratio').addEventListener('change', (e) => {
+            this.aspectRatio = e.target.value;
+            this.resizeCanvas();
         });
     }
 
@@ -243,6 +280,8 @@ class PatternFlowApp {
 
         const sketch = (p) => {
             p.setup = () => {
+                // Pass the P5 instance itself as the graphics context for screen rendering
+                // We'll update patterns to draw to 'p' by default, or an offscreen buffer
                 const canvas = pattern.setup.call(pattern, p, params, this.canvasContainer);
                 canvas.parent(this.canvasContainer);
             };
@@ -254,6 +293,133 @@ class PatternFlowApp {
         };
 
         this.p5Instance = new p5(sketch);
+    }
+
+    /**
+     * Generate High-Resolution Texture for Export
+     */
+    exportHighRes(width = 2048, height = 2048) {
+        if (!this.currentPattern) return;
+
+        // Create a temporary offscreen internal p5 instance to render high-res
+        const params = this.controlSystem.getParams();
+
+        // We need to use instance mode but headless/offscreen
+        const exportSketch = (p) => {
+            p.setup = () => {
+                p.createCanvas(width, height);
+                p.pixelDensity(1); // 1:1 for export, actual pixels
+
+                // Clear background or transparent
+                if (this.exportSettings.transparent) {
+                    p.clear();
+                } else {
+                    p.background(10, 10, 11); // Default dark BG
+                }
+
+                // Initialize pattern state if needed
+                // Note: We might need to mock "container" for setup
+                if (this.currentPattern.setup) {
+                    // We call setup but ignore the returned canvas since we already created one
+                    this.currentPattern.setup.call(this.currentPattern, p, params, { clientWidth: width + 48, clientHeight: height + 48 });
+                }
+
+                // Draw once
+                if (this.currentPattern.draw) {
+                    this.currentPattern.draw.call(this.currentPattern, p, params);
+                }
+
+                // Save
+                p.saveCanvas(`${this.currentPatternKey}-highres`, 'png');
+
+                // Cleanup happens automatically when listener finishes?
+                // We can't easily destroy this instance from inside, so we assume p5 handles it or we lose reference
+            };
+        };
+
+        // Run the export sketch
+        new p5(exportSketch);
+
+        this.showToast('Generating High-Res Export...');
+    }
+
+    /**
+     * Export Configuration as JSON
+     */
+    exportConfigJSON() {
+        if (!this.currentPattern) return;
+        const params = this.controlSystem.getParams();
+        const config = {
+            pattern: this.currentPatternKey,
+            timestamp: new Date().toISOString(),
+            params: params
+        };
+
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(config, null, 2));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", `${this.currentPatternKey}-config.json`);
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+
+        this.showToast('JSON Config Exported!');
+    }
+
+    /**
+     * Export as React Component
+     */
+    async exportReactComponent() {
+        if (!this.currentPattern) return;
+
+        const params = this.controlSystem.getParams();
+        const patternName = this.currentPattern.name.replace(/\s+/g, '');
+
+        // We need to extract the draw/setup logic from getCode probably, or construct it
+        // Ideally we'd use a robust generator, but for now let's wrap the vanilla code
+
+        const vanillaCode = this.currentPattern.getCode.call(this.currentPattern, params);
+
+        // Very basic parsing to extract setup/draw body content would be complex.
+        // Instead, let's create a functional component wrapper around the logic
+
+        const reactCode = `
+import React from 'react';
+import Sketch from 'react-p5';
+
+// ${patternName} Component
+// Generated by PatternFlow
+const ${patternName} = (props) => {
+    // Parameters
+    const params = ${JSON.stringify(params, null, 4).replace(/"([^"]+)":/g, '$1:')};
+
+    const setup = (p5, canvasParentRef) => {
+        p5.createCanvas(800, 600).parent(canvasParentRef);
+        // Setup logic here
+    };
+
+    const draw = (p5) => {
+        p5.background(10, 10, 11);
+        // Drawing logic derived from params
+        /*
+           Copy-paste your draw logic here or utilize the
+           parameters object above to drive your animation.
+        */
+    };
+
+    return <Sketch setup={setup} draw={draw} />;
+};
+
+export default ${patternName};
+        `;
+
+        // Show in preview modal instead of text content
+        document.getElementById('code-content').textContent = reactCode;
+        document.querySelector('.modal-body').classList.add('hidden');
+        document.getElementById('code-preview').classList.remove('hidden');
+
+        // Update header text
+        document.querySelector('.code-header span').textContent = `${patternName}.jsx`;
     }
 
     /**
@@ -307,14 +473,50 @@ class PatternFlowApp {
     }
 
     /**
-     * Resize canvas on window resize
+     * Resize canvas on window resize or aspect ratio change
      */
     resizeCanvas() {
         if (this.p5Instance) {
-            const width = this.canvasContainer.clientWidth - 48;
-            const height = this.canvasContainer.clientHeight - 48;
-            this.p5Instance.resizeCanvas(width, height);
+            const containerW = this.canvasContainer.clientWidth - 48; // padding
+            const containerH = this.canvasContainer.clientHeight - 48;
+
+            let w = containerW;
+            let h = containerH;
+
+            if (this.aspectRatio && this.aspectRatio !== 'free') {
+                const [rw, rh] = this.aspectRatio.split(':').map(Number);
+                const targetRatio = rw / rh;
+                const containerRatio = containerW / containerH;
+
+                if (containerRatio > targetRatio) {
+                    // Container is wider than target, so height constrains
+                    h = containerH;
+                    w = h * targetRatio;
+                } else {
+                    // Container is taller (or equal) than target, so width constrains
+                    w = containerW;
+                    h = w / targetRatio;
+                }
+            }
+
+            this.p5Instance.resizeCanvas(w, h);
         }
+    }
+
+    /**
+     * Toggle Developer Mode
+     */
+    toggleDevMode(enabled) {
+        this.devMode = enabled;
+        if (enabled) {
+            document.body.classList.add('dev-mode');
+            this.showToast('Dev Mode Enabled');
+        } else {
+            document.body.classList.remove('dev-mode');
+            this.showToast('Dev Mode Disabled');
+        }
+        // Force refresh controls if we had specific dev-mode UI changes there
+        // this.controlSystem.refresh(); 
     }
 
     /**
